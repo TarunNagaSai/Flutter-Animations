@@ -61,6 +61,8 @@ dependencies:
   flutter_sticky_header: ^0.8.0
   riverpod: ^2.6.1
   flutter_riverpod: ^2.6.1
+  like_button: ^2.1.0
+  flutter_3d_controller: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -90,6 +92,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/lottie/
+    - assets/3d_models/
 
 
 flutter_gen:
