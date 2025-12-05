@@ -1,5 +1,6 @@
 import 'package:animations/src/providers/title_animation_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LayoutWidget extends ConsumerStatefulWidget {
@@ -19,17 +20,30 @@ class LayoutWidget extends ConsumerStatefulWidget {
 }
 
 class _LayoutWidgetState extends ConsumerState<LayoutWidget> {
-  String? mostVisibleSliver;
+  // Map to track visibility of all slivers
+  double visibilityMap = 0.0;
+  late String mostVisibleSliver;
+  void _updateMostVisibleSliver() {
+    final visibilityRatio = visibilityMap;
+    final mostVisibleSliver = ref.watch(titleModeProvider);
+    if (visibilityRatio >= 0.84 && mostVisibleSliver != widget.title) {
+      if (mounted) {
+        // Always check mounted before setState
+
+        ref.read(titleModeProvider.notifier).state = widget.title;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Map to track visibility of all slivers
-    final Map<String, double> visibilityMap = {};
+    mostVisibleSliver = ref.watch(titleModeProvider);
     return SliverLayoutBuilder(
       builder: (context, constraints) {
-        // Calculate the total extent of your sliver content
+        /// Calculate the total extent of your sliver content
         final sliverHeight = MediaQuery.of(context).size.height;
 
-        // Calculate visible portion
+        /// Calculate visible portion
         final overlap = constraints.overlap;
         final remainingPaint = constraints.remainingPaintExtent;
 
@@ -40,24 +54,21 @@ class _LayoutWidgetState extends ConsumerState<LayoutWidget> {
           visibleHeight = remainingPaint.clamp(0.0, sliverHeight);
         }
 
+        /// Check the visibility
         final visibilityRatio = visibleHeight / sliverHeight;
 
         // Store visibility for this sliver
-        visibilityMap["name"] = visibilityRatio;
+        visibilityMap = visibilityRatio;
 
-        // After all slivers are built, find the most visible one
+        // This will run after EVERY frame where build is called
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          final mostVisible = visibilityMap.entries.reduce(
-            (a, b) => a.value > b.value ? a : b,
-          );
-          if (mostVisible.value >= 0.9 &&
-              mostVisibleSliver != mostVisible.key) {
-            setState(() {
-              mostVisibleSliver = mostVisible.key;
-            });
-            ref.read(titleModeProvider.notifier).state = widget.title;
-          }
+          _updateMostVisibleSliver();
         });
+
+        // if (constraints.userScrollDirection == ScrollDirection.forward) {
+        //   _updateMostVisibleSliver();
+        // }
+
         return SliverToBoxAdapter(
           child: SizedBox(
             key: widget.sectionKey,
