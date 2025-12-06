@@ -10,6 +10,7 @@ import 'package:animations/src/home/slivers/scrollable_layouts.dart';
 import 'package:animations/src/home/slivers/thankyou_sliver.dart';
 import 'package:animations/src/home/slivers/welcome_sliver.dart';
 import 'package:animations/src/home/widgets/layout_widget.dart';
+import 'package:animations/src/providers/title_animation_provider.dart';
 import 'package:flutter/material.dart';
 
 /// wrap a class around this file
@@ -59,6 +60,20 @@ class SliverSections {
     "Thank You",
   ];
 
+  static List<Color> titleColors = [
+    Color(0xFFFFD6DD), // soft rose (works on dark + light)
+    Color(0xFFBEE9FF), // soft sky blue
+    Color(0xFFBBE2DE), // mint aqua
+    Color(0xFFAED9DF), // muted teal
+    Color(0xFF6BC4E2), // aqua blue
+    Color(0xFF4E89DA), // steel blue
+    Color(0xFF3F6FB2), // deep desaturated blue
+    Color(0xFF5167D6), // cool saturated blue-purple
+    Color(0xFFD9B3FF), // lavender (dark-safe)
+    Color(0xFF7A63E8), // indigo violet
+    Color(0xFF243A63), // dark navy (visible in light mode)
+  ];
+
   /// A list of slivers used in the Home screen's CustomScrollView.
   static final List<Widget> sliverList = [
     /// Welcome Sliver
@@ -102,7 +117,10 @@ class SliverSections {
       if (index > 1) {
         updatedSliverList.add(
           LayoutWidget(
-            title: titles[index],
+            headerData: HeaderData(
+              color: titleColors[index],
+              title: titles[index],
+            ),
             sectionKey: sliverKeys[index],
             child: sliverList[index],
           ),

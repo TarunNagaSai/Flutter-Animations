@@ -291,7 +291,7 @@ class _Product3DCardState extends State<Product3DCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Card.filled(
-        color: Colors.grey.shade200,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         elevation: 8,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
@@ -303,7 +303,7 @@ class _Product3DCardState extends State<Product3DCard> {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                    color: Theme.of(context).colorScheme.surfaceContainer,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(20),
                     ),

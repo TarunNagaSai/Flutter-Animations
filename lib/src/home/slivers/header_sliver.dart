@@ -4,24 +4,26 @@ import 'package:animations/src/providers/title_animation_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HeaderSliver extends StatefulWidget {
+class HeaderSliver extends ConsumerStatefulWidget {
   const HeaderSliver({super.key});
 
   @override
-  State<HeaderSliver> createState() => _HeaderSliverState();
+  ConsumerState<HeaderSliver> createState() => _HeaderSliverState();
 }
 
-class _HeaderSliverState extends State<HeaderSliver>
+class _HeaderSliverState extends ConsumerState<HeaderSliver>
     with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
+    final title = ref.watch(titleModeProvider).title;
+    final color = ref.watch(titleModeProvider).color;
     return SliverPersistentHeader(
       delegate: StickyHeaderDelegate(
         builder: (isPinned, sizeWidth) {
           return AnimatedContainer(
             duration: const Duration(milliseconds: 500),
             decoration: BoxDecoration(
-              color: Colors.blueAccent,
+              color: color,
               borderRadius: !isPinned
                   ? null
                   : BorderRadius.only(
@@ -29,38 +31,20 @@ class _HeaderSliverState extends State<HeaderSliver>
                       bottomLeft: Radius.circular(60),
                     ),
             ),
-            alignment: Alignment.centerLeft,
+
             child: Padding(
-              padding: EdgeInsets.only(left: 16.0, top: 40),
-              child: Row(
-                mainAxisAlignment: .spaceBetween,
-                crossAxisAlignment: .end,
-                children: [
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final title = ref.watch(titleModeProvider);
-                      return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) {
-                          return ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          );
-                        },
-                        child: Text(
-                          title,
-                          key: ValueKey(title),
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  ThemeWidget(isPinned: isPinned),
-                ],
+              padding: EdgeInsets.only(left: 16.0, bottom: 16),
+              child: AnimatedAlign(
+                alignment: isPinned ? .bottomCenter : .center,
+                curve: Curves.easeInOut,
+                duration: const Duration(milliseconds: 500),
+                child: Row(
+                  mainAxisAlignment: .spaceBetween,
+                  children: [
+                    TitleWidget(title: title),
+                    ThemeWidget(isPinned: isPinned),
+                  ],
+                ),
               ),
             ),
           );
@@ -69,6 +53,31 @@ class _HeaderSliverState extends State<HeaderSliver>
         maxHeight: 160,
       ),
       pinned: true,
+    );
+  }
+}
+
+class TitleWidget extends StatelessWidget {
+  const TitleWidget({super.key, required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (child, animation) {
+        return ScaleTransition(scale: animation, child: child);
+      },
+      child: Text(
+        title,
+        key: ValueKey(title),
+        style: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }
@@ -102,19 +111,21 @@ class _ThemeWidgetState extends State<ThemeWidget>
     );
   }
 
-  void checkFade() {
-    if (widget.isPinned) {
-      _fadeAnimationController.forward();
-      return;
-    } else {
-      _fadeAnimationController.reverse();
-      return;
+  @override
+  void didUpdateWidget(covariant ThemeWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.isPinned != oldWidget.isPinned) {
+      if (widget.isPinned) {
+        _fadeAnimationController.forward();
+      } else {
+        _fadeAnimationController.reverse();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    checkFade();
     return FadeTransition(
       opacity: _fade,
       child: Padding(
