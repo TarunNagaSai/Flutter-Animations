@@ -27,7 +27,7 @@ class _HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
         _childKey.currentState?.startFadeOut();
       }
     });
-    sliverChildren = SliverSections.generateSliverList();
+    sliverChildren = SliverSections.generateSliverList(scrollController);
     super.initState();
   }
 
@@ -50,7 +50,7 @@ class _HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
                 physics: scrollEnabled
                     ? const BouncingScrollPhysics()
                     : const NeverScrollableScrollPhysics(),
-                slivers: SliverSections.generateSliverList(),
+                slivers: sliverChildren,
               ),
             ),
           ),

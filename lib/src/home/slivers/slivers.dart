@@ -79,9 +79,6 @@ class SliverSections {
     /// Welcome Sliver
     WelcomeSliver(),
 
-    /// Header Sliver
-    HeaderSliver(),
-
     /// Cards and Hero animations
     CardsSliver(),
 
@@ -111,7 +108,8 @@ class SliverSections {
   ];
 
   /// Generates a list of sliver widgets wrapped with their corresponding global keys.
-  static List<Widget> generateSliverList() {
+  static List<Widget> generateSliverList(ScrollController scrollController) {
+    sliverList.insert(1, HeaderSliver(scrollController: scrollController));
     final updatedSliverList = <Widget>[];
     for (int index = 0; index < sliverKeys.length; index++) {
       if (index > 1) {

@@ -2,11 +2,12 @@ import 'package:animations/src/home/slivers/stacked_header.dart';
 import 'package:animations/src/providers/theme_provider.dart';
 import 'package:animations/src/providers/title_animation_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HeaderSliver extends ConsumerStatefulWidget {
-  const HeaderSliver({super.key});
-
+  const HeaderSliver({super.key, required this.scrollController});
+  final ScrollController scrollController;
   @override
   ConsumerState<HeaderSliver> createState() => _HeaderSliverState();
 }
@@ -41,7 +42,12 @@ class _HeaderSliverState extends ConsumerState<HeaderSliver>
                 child: Row(
                   mainAxisAlignment: .spaceBetween,
                   children: [
-                    TitleWidget(title: title),
+                    Expanded(
+                      child: SequentialTextSwitcher(
+                        text: title,
+                        scrollController: widget.scrollController,
+                      ),
+                    ),
                     ThemeWidget(isPinned: isPinned),
                   ],
                 ),
@@ -58,8 +64,13 @@ class _HeaderSliverState extends ConsumerState<HeaderSliver>
 }
 
 class TitleWidget extends StatelessWidget {
-  const TitleWidget({super.key, required this.title});
+  const TitleWidget({
+    super.key,
+    required this.title,
+    required this.scrollDirection,
+  });
 
+  final ScrollDirection scrollDirection;
   final String title;
 
   @override
@@ -67,7 +78,23 @@ class TitleWidget extends StatelessWidget {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
       transitionBuilder: (child, animation) {
-        return ScaleTransition(scale: animation, child: child);
+        final outAnimation = Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-1.0, 0.0), // slide left
+        ).animate(animation);
+
+        final inAnimation = Tween<Offset>(
+          begin: const Offset(3.0, 0.0), // from right
+          end: Offset.zero,
+        ).animate(animation);
+
+        // NEW widget → use inAnimation
+        // OLD widget → use outAnimation
+        if (animation.status == AnimationStatus.forward) {
+          return SlideTransition(position: inAnimation, child: child);
+        } else {
+          return SlideTransition(position: outAnimation, child: child);
+        }
       },
       child: Text(
         title,
@@ -184,4 +211,133 @@ class _ThemeWidgetState extends State<ThemeWidget>
       ),
     );
   }
+}
+
+///
+class SequentialTextSwitcher extends StatefulWidget {
+  final String text;
+  final ScrollController scrollController;
+  const SequentialTextSwitcher({
+    super.key,
+    required this.text,
+    required this.scrollController,
+  });
+
+  @override
+  State<SequentialTextSwitcher> createState() => _SequentialTextSwitcherState();
+}
+
+class _SequentialTextSwitcherState extends State<SequentialTextSwitcher>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _oldSlide;
+  late Animation<Offset> _newSlide;
+
+  String _oldText = "Cards";
+  String _newText = "Cards";
+  double previousOffset = 0;
+  bool isScrollingDown = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _newText = widget.text;
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _setupAnimations();
+  }
+
+  void _setupAnimations() {
+    final double currentOffset = widget.scrollController.offset;
+
+    bool isScrollingDown = currentOffset > previousOffset;
+
+    final beginOld = isScrollingDown ? Offset.zero : Offset.zero;
+    final endOld = isScrollingDown
+        ? const Offset(-1.0, 0.0)
+        : const Offset(3.0, 0.0);
+
+    final beginNew = isScrollingDown
+        ? const Offset(3.0, 0.0)
+        : const Offset(-1.0, 0.0);
+    final endNew = Offset.zero;
+
+    // Common curves reused
+    final slideOutCurve = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+    );
+
+    final slideInCurve = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+    );
+
+    _oldSlide = Tween<Offset>(
+      begin: beginOld,
+      end: endOld,
+    ).animate(slideOutCurve);
+    _newSlide = Tween<Offset>(
+      begin: beginNew,
+      end: endNew,
+    ).animate(slideInCurve);
+    previousOffset = currentOffset;
+  }
+
+  @override
+  void didUpdateWidget(covariant SequentialTextSwitcher oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.text != widget.text) {
+      _oldText = oldWidget.text;
+      _newText = widget.text;
+
+      _controller.forward(from: 0.0);
+      _setupAnimations();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (_, __) {
+          return Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              // OLD TEXT (first phase)
+              if (_controller.value < 0.5)
+                SlideTransition(
+                  position: _oldSlide,
+                  child: Text(_oldText, style: _textStyle),
+                ),
+
+              // NEW TEXT (second phase)
+              if (_controller.value >= 0.25)
+                SlideTransition(
+                  position: _newSlide,
+                  child: Text(_newText, style: _textStyle),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  TextStyle get _textStyle => const TextStyle(
+    fontSize: 32,
+    color: Colors.white,
+    fontWeight: FontWeight.bold,
+  );
 }
