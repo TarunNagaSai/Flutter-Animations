@@ -63,6 +63,8 @@ dependencies:
   flutter_riverpod: ^2.6.1
   like_button: ^2.1.0
   flutter_3d_controller: ^2.3.0
+  card_stack_swiper: ^1.0.3
+  flutter_svg: ^2.2.3
 
 dev_dependencies:
   flutter_test:
@@ -93,6 +95,8 @@ flutter:
   assets:
     - assets/lottie/
     - assets/3d_models/
+    - assets/svgs/
+    - assets/images/
 
 
 flutter_gen:
