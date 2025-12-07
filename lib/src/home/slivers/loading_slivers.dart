@@ -1,3 +1,4 @@
+import 'package:animations/core/extensions_methods.dart';
 import 'package:flutter/material.dart';
 
 class LoadingSlivers extends StatelessWidget {
@@ -5,6 +6,9 @@ class LoadingSlivers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text("Loaders Widgets Coming Soon!");
+    return DecoratedBox(
+      decoration: BoxDecoration(color: context.colors.surfaceContainer),
+      child: Text("Loaders Widgets Coming Soon!"),
+    );
   }
 }
